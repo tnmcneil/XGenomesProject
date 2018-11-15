@@ -110,18 +110,3 @@ score = classifier.evaluate(testing_set, y_test, verbose=0)
 print('Test score:', score[0])
 print('Test accuracy:', score[1])
 
-'''
-print("Working with {0} lambda images".format(len(lambda_data)))
-
-print("Image Examples: ")
-for i in range(40,42):
-    print(lambda_data[i])
-    display(_Imgdis(filename= cwd + lambda_data[i]))
-
-print("Working with {0} t7 images".format(len(lambda_data)))
-
-print("Image Examples: ")
-for i in range(40,42):
-    print(t7_data[i])
-    display(_Imgdis(filename= cwd + t7_data[i]))
-'''
