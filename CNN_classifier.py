@@ -14,19 +14,19 @@ from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_a
 classifier = Sequential()
 
 # layer 1
-classifier.add(Conv2D(32,(3,3), input_shape=(512, 512, 2)))
+classifier.add(Conv2D(32,(50,10), input_shape=(512, 512, 2)))
 classifier.add(Activation('relu'))
 classifier.add(MaxPooling2D(pool_size=(2,2)))
 
 # layer 2
-classifier.add(Conv2D(32,(3,3)))
+classifier.add(Conv2D(64,(10,5)))
 classifier.add(Activation('relu'))
 classifier.add(MaxPooling2D(pool_size=(2,2)))
 
 # layer 3
-classifier.add(Conv2D(64, (3,3)))
-classifier.add(Activation('relu'))
-classifier.add(MaxPooling2D(pool_size=(2,2)))
+#classifier.add(Conv2D(64, (3,3)))
+#classifier.add(Activation('relu'))
+#classifier.add(MaxPooling2D(pool_size=(2,2)))
 
 # flatten
 classifier.add(Flatten())
@@ -43,51 +43,102 @@ classifier.compile(optimizer='adam', loss='binary_crossentropy',metrics=['accura
 
 cwd = os.getcwd()
 
-lambda_dir = cwd + "/processed_data/lambda"
-os.chdir(lambda_dir)
-lambda_data = glob.glob("*.jpg")
-lambda_data = ["/processed_data/lambda/" + data for data in lambda_data]
+lambda_dir1 = cwd + "/data/lambda_1"
+os.chdir(lambda_dir1)
+lambda_data1 = glob.glob("*.jpg")
+lambda_data1 = [lambda_dir1 + "/" + data for data in lambda_data1]
 
-t7_dir = cwd + "/processed_data/t7"
-os.chdir(t7_dir)
-t7_data = glob.glob("*.jpg")
-t7_data = ["/processed_data/t7/" + data for data in t7_data]
+lambda_dir2 = cwd + "/data/lambda_2"
+os.chdir(lambda_dir2)
+lambda_data2 = glob.glob("*.jpg")
+lambda_data2 = [lambda_dir2 + "/" + data for data in lambda_data2]
+
+lambda_dir3 = cwd + "/data/lambda_3"
+os.chdir(lambda_dir3)
+lambda_data3 = glob.glob("*.jpg")
+lambda_data3 = [lambda_dir3 + "/" + data for data in lambda_data3]
+
+lambda_data = lambda_data1 + lambda_data2 + lambda_data3
+
+t7_dir1 = cwd + "/data/T7_1"
+os.chdir(t7_dir1)
+t7_data1 = glob.glob("*.jpg")
+t7_data1 = [t7_dir1 + "/" + data for data in t7_data1]
+
+t7_dir2 = cwd + "/data/T7_2"
+os.chdir(t7_dir2)
+t7_data2 = glob.glob("*.jpg")
+t7_data2 = [t7_dir2 + "/" + data for data in t7_data2]
+
+t7_dir3 = cwd + "/data/T7_3"
+os.chdir(t7_dir3)
+t7_data3 = glob.glob("*.jpg")
+t7_data3 = [t7_dir3 + "/" + data for data in t7_data3]
+
+t7_data = t7_data1 + t7_data2 + t7_data3
 
 random.shuffle(lambda_data)
 random.shuffle(t7_data)
 
-lambda_train = lambda_data[:4000]
-t7_train = t7_data[:4000]
-lambda_test = lambda_data[4000:]
-t7_test = t7_data[4000:]
+lambda_len = len(lambda_data)
+t_len = len(t7_data)
+
+l_train_cutoff = int((0.7)*(lambda_len))
+l_test_cutoff = int((0.2)*(lambda_len)) + l_train_cutoff
+l_val_cutoff = int((0.1)*(lambda_len)) + l_test_cutoff
+
+t_train_cutoff = int((0.7)*(t_len))
+t_test_cutoff = int((0.2)*(t_len)) + t_train_cutoff
+t_val_cutoff = int((0.1)*(t_len)) + t_test_cutoff
+
+lambda_train = lambda_data[:l_train_cutoff]
+lambda_test = lambda_data[l_train_cutoff:l_test_cutoff]
+lambda_val = lambda_data[l_test_cutoff:]
+
+t7_train = t7_data[:t_train_cutoff]
+t7_test = t7_data[t_train_cutoff:t_test_cutoff]
+t7_val = t7_data[t_test_cutoff:]
+
+#0.0 = lambda; 1.0 = t7
 
 train_files = lambda_train + t7_train
-#y_train = ["lambda" for i in range(4000)] + ["t7" for j in range(4000)]
-y_train = [0.0 for i in range(4000)] + [1.0 for j in range(4000)]
+y_train = [0.0 for i in range(len(lambda_train))] + [1.0 for j in range(len(t7_train))]
 
 test_files = lambda_test + t7_test
-#y_test = ["lambda" for i in range(1000)] + ["t7" for j in range(1000)]
-y_test = [0.0 for i in range(1000)] + [1.0 for j in range(1000)]
+y_test = [0.0 for i in range(len(lambda_test))] + [1.0 for j in range(len(t7_test))]
 
-training_set = np.ndarray(shape=(8000, 512, 512, 2), dtype=np.float32)
+val_files = lambda_val + t7_val
+y_val = [0.0 for i in range(len(lambda_val))] + [1.0 for j in range(len(t7_val))]
+
+training_set = np.ndarray(shape=(len(train_files), 512, 512, 2), dtype=np.float32)
 i = 0
 for _file in train_files:
-    img = load_img(cwd + _file).convert('LA')
+    img = load_img(_file).convert('LA')
     x = img_to_array(img)
     training_set[i] = x
-    if i > 40 and i < 45:
-        print(x.shape)
     i += 1
 
-testing_set = np.ndarray(shape=(2000, 512, 512, 2), dtype=np.float32)
+testing_set = np.ndarray(shape=(len(test_files), 512, 512, 2), dtype=np.float32)
 j = 0
 for _file in test_files:
-    img = load_img(cwd + _file).convert('LA')
+    img = load_img(_file).convert('LA')
     x = img_to_array(img)
     testing_set[j] = x
-    if j > 40 and j < 45:
-        print(x.shape)
     j += 1
+
+val_set = np.ndarray(shape=(len(val_files), 512, 512, 2), dtype=np.float32)
+k = 0
+for _file in val_files:
+    img = load_img(_file).convert('LA')
+    x = img_to_array(img)
+    val_set[k] = x
+    k += 1
+
+#training_set = training_set.astype("float32")/255
+#testing_set = testing_set.astype("float32")/255
+#val_set = val_set.astype("float32")/255
+
+datagen = ImageDataGenerator(zoom_range = 0.1, height_shift_range = 0.1, width_shift_range = 0.1, rotation_range = 10)
 
 # taken from old Keras documentation
 
@@ -103,10 +154,25 @@ def recall(y_true, y_pred):
     recall = true_positives/ (possible_positives + K.epsilon())
     return recall
 
-classifier.fit(x=training_set, y = y_train, epochs = 25, validation_data = (testing_set, y_test))
+classifier.fit(x=training_set, y = y_train, epochs = 25, validation_data = (val_set, y_val))
 
 score = classifier.evaluate(testing_set, y_test, verbose=0)
 
 print('Test score:', score[0])
 print('Test accuracy:', score[1])
 
+'''
+print("Working with {0} lambda images".format(len(lambda_data)))
+
+print("Image Examples: ")
+for i in range(40,42):
+    print(lambda_data[i])
+    display(_Imgdis(filename= cwd + lambda_data[i]))
+
+print("Working with {0} t7 images".format(len(lambda_data)))
+
+print("Image Examples: ")
+for i in range(40,42):
+    print(t7_data[i])
+    display(_Imgdis(filename= cwd + t7_data[i]))
+'''
