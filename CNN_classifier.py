@@ -105,13 +105,34 @@ t7_val = t7_data[t_test_cutoff:]
 #0.0 = lambda; 1.0 = t7
 
 train_files = lambda_train + t7_train
-y_train = [0.0 for i in range(len(lambda_train))] + [1.0 for j in range(len(t7_train))]
+random.shuffle(train_files)
+y_train = [None] * (len(train_files))
+i = 0
+for i in range(len(train_files)):
+    if 'lambda' in train_files[i]:
+        y_train[i] = 0.0
+    else:
+        y_train[i] = 1.0
 
 test_files = lambda_test + t7_test
-y_test = [0.0 for i in range(len(lambda_test))] + [1.0 for j in range(len(t7_test))]
+random.shuffle(test_files)
+y_test = [None] * (len(test_files))
+j = 0
+for i in range(len(test_files)):
+    if 'lambda' in test_files[i]:
+        y_test[i] = 0.0
+    else:
+        y_test[i] = 1.0
 
 val_files = lambda_val + t7_val
-y_val = [0.0 for i in range(len(lambda_val))] + [1.0 for j in range(len(t7_val))]
+random.shuffle(val_files)
+y_val = [None] * (len(val_files))
+k = 0
+for k in range(len(val_files)):
+    if 'lambda' in val_files[i]:
+        y_val[i] = 0.0
+    else:
+        y_val[i] = 1.0
 
 training_set = np.ndarray(shape=(len(train_files), 512, 512, 2), dtype=np.float32)
 i = 0
