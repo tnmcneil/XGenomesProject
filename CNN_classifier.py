@@ -13,6 +13,7 @@ from keras.preprocessing.image import ImageDataGenerator, array_to_img, img_to_a
 import functools
 from keras import backend as K
 import tensorflow as tf
+import math
 
 classifier = Sequential()
 
@@ -39,8 +40,6 @@ classifier.add(Activation('relu'))
 classifier.add(Dropout(0.4))
 classifier.add(Dense(1))
 classifier.add(Activation('sigmoid'))
-
-#classifier.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
 
 # image processing
 
@@ -102,6 +101,16 @@ t7_train = t7_data[:t_train_cutoff]
 t7_test = t7_data[t_train_cutoff:t_test_cutoff]
 t7_val = t7_data[t_test_cutoff:]
 
+'''
+lambda_train = lambda_data[:10]
+lambda_test = lambda_data[20:30]
+lambda_val = lambda_data[35:40]
+
+t7_train = t7_data[:10]
+t7_test = t7_data[20:30]
+t7_val = t7_data[35:40]
+'''
+
 #0.0 = lambda; 1.0 = t7
 
 train_files = lambda_train + t7_train
@@ -118,21 +127,21 @@ test_files = lambda_test + t7_test
 random.shuffle(test_files)
 y_test = [None] * (len(test_files))
 j = 0
-for i in range(len(test_files)):
-    if 'lambda' in test_files[i]:
-        y_test[i] = 0.0
+for j in range(len(test_files)):
+    if 'lambda' in test_files[j]:
+        y_test[j] = 0.0
     else:
-        y_test[i] = 1.0
+        y_test[j] = 1.0
 
 val_files = lambda_val + t7_val
 random.shuffle(val_files)
 y_val = [None] * (len(val_files))
 k = 0
 for k in range(len(val_files)):
-    if 'lambda' in val_files[i]:
-        y_val[i] = 0.0
+    if 'lambda' in val_files[k]:
+        y_val[k] = 0.0
     else:
-        y_val[i] = 1.0
+        y_val[k] = 1.0
 
 training_set = np.ndarray(shape=(len(train_files), 512, 512, 2), dtype=np.float32)
 i = 0
@@ -158,9 +167,9 @@ for _file in val_files:
     val_set[k] = x
     k += 1
 
-#training_set = training_set.astype("float32")/255
-#testing_set = testing_set.astype("float32")/255
-#val_set = val_set.astype("float32")/255
+training_set = training_set.astype("float32")/255
+testing_set = testing_set.astype("float32")/255
+val_set = val_set.astype("float32")/255
 
 def as_keras_metric(method):
     @functools.wraps(method)
@@ -184,13 +193,43 @@ classifier.compile(optimizer='adam', loss='binary_crossentropy',metrics=['accura
 
 classifier.fit(x=training_set, y = y_train, epochs = 25, validation_data = (val_set, y_val))
 
-score = classifier.evaluate(testing_set, y_test, verbose=0)
+score = classifier.evaluate(testing_set, y_test, verbose=1)
+
+hypothesis = classifier.predict(testing_set, verbose=1)
+
+print('hypothesis before:', hypothesis)
+
+i=0
+for i in range(len(testing_set)):
+    if hypothesis[i] > 0.5:
+        hypothesis[i] = 1
+    else:
+        hypothesis[i] = 0
+
+len_test = len(y_test)
+
+hypothesis = np.reshape(hypothesis, len_test)
+
+print('hypothesis shape after:', hypothesis.shape)
+print('hypothesis after reshape:', hypothesis)
+
+y_test = np.array(y_test)
+
+print('y:', y_test)
+print('y shape:', y_test.shape)
+
+incorrect = abs(hypothesis - y_test)
+total_incorrect = np.sum(incorrect)
+proportion_correct = 1 - (total_incorrect/len_test)
 
 print('Test score:', score[0])
 print('Test accuracy:', score[1])
 print('precision:', score[2])
 print('recall', score[3])
 print('auc', score[4])
+print('incorrect:', incorrect)
+print('total_incorrect:', total_incorrect)
+print('proportion correct:', proportion_correct) 
 
 '''
 print("Working with {0} lambda images".format(len(lambda_data)))
