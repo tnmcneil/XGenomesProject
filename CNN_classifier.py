@@ -26,11 +26,13 @@ classifier = Sequential()
 
 # layer 1
 classifier.add(Conv2D(32,(50,10), input_shape=(512, 512, 2)))
+#classifier.add(Conv2D(32,(3,3), input_shape=(512, 512, 2)))
 classifier.add(Activation('relu'))
 classifier.add(MaxPooling2D(pool_size=(2,2)))
 
 # layer 2
 classifier.add(Conv2D(64,(10,5)))
+#classifier.add(Conv2D(32,(3,3)))
 classifier.add(Activation('relu'))
 classifier.add(MaxPooling2D(pool_size=(2,2)))
 
@@ -206,15 +208,15 @@ def auc_pr(y_true, y_pred, curve='PR'):
 precision = as_keras_metric(tf.metrics.precision)
 recall = as_keras_metric(tf.metrics.recall)
 
-#classifier.compile(optimizer='adam', loss='binary_crossentropy',metrics=['accuracy', precision, recall, auc_pr])
+#classifier.compile(optimizer='adam', loss='binary_crossentropy',metrics=['accuracy'])
 
-classifier.compile(optimizer=Adam(lr=0.0001, beta_1=0.9, beta_2=0.9999, epsilon=1e-08, decay=0.0),
+classifier.compile(optimizer=Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=1e-08, decay=0.0),
                    loss='binary_crossentropy',
-                   metrics=['accuracy', precision, recall, auc_pr])
+                   metrics=['accuracy'])
 
-hist = classifier.fit(x=training_set, y = y_train, epochs = 25, batch_size=32, validation_data = (val_set, y_val))
+hist = classifier.fit(x=training_set, y = y_train, epochs = 25, verbose = 0, batch_size=32, validation_data = (val_set, y_val))
 
-score = classifier.evaluate(testing_set, y_test, verbose=2)
+score = classifier.evaluate(testing_set, y_test, verbose=0)
 
 hypothesis = classifier.predict(testing_set)
 
@@ -230,23 +232,15 @@ for i in range(len(testing_set)):
     else:
         label[i] = [0.0,1.0]
 
+print("hypothesis after")
 print(label)
-print(label.shape)
 len_test = len(y_test)
-
-#label = np.reshape(label, len_test)
-
-#print('label shape after:', label.shape)
-#print('label after reshape:', label)
 
 y_test = np.array(y_test)
 
 print('y:', y_test)
 print('y shape:', y_test.shape)
 
-
-#incorrect = abs(label - y_test)
-#total_incorrect = np.sum(incorrect)
 incorrect = 0
 i = 0
 for i in range(len_test):
@@ -254,13 +248,30 @@ for i in range(len_test):
         incorrect += 1
 proportion_correct = 1 - (incorrect/len_test)
 
+i = 0
+tp = 0
+fn = 0
+tn = 0
+fp = 0
+for i in range(len_test):
+    if (y_test[i] == [1.0, 0.0]).all() and (label[i] == [1.0,0.0]).all():
+        tp += 1
+    elif (y_test[i] == [1.0, 0.0]).all() and (label[i] == [0.0, 1.0]).all():
+        fn += 1
+    elif (y_test[i] == [0.0, 1.0]).all() and (label[i] == [0.0, 1.0]).all():
+        tn += 1
+    elif (y_test[i] == [0.0, 1.0]).all() and (label[i] == [1.0, 0.0]).all():
+        fp += 1
+
+print("self calculated")
+print("true positives = ", tp)
+print("false negatives = ", fn)
+print("true negatives = ", tn)
+print("false positives = ", fp)
+
 print('Test score:', score[0])
 print('Test accuracy:', score[1])
-print('precision:', score[2])
-print('recall', score[3])
-print('auc', score[4])
 print('incorrect:', incorrect)
-print('total_incorrect:', incorrect)
 print('proportion correct:', proportion_correct) 
 
 # summarize history for loss
@@ -270,7 +281,22 @@ plt.title("model loss")
 plt.ylabel("loss")
 plt.xlabel("epoch")
 plt.legend(["train", "val"], loc="upper left")
-plt.savefig(cwd + "loss_history.", bbox_inches='tight')
+plt.savefig(cwd + "/loss_history72.png", bbox_inches='tight')
+
+# summarize history for accuracy
+plt.plot(hist.history["acc"])
+plt.plot(hist.history["val_acc"])
+plt.title("model accuracy")
+plt.ylabel("accuracy")
+plt.xlabel("epoch")
+plt.legend(["train", "val"], loc="upper left")
+plt.savefig(cwd + "/acc_history72.png", bbox_inches='tight')
+
+precision_calc = tp / (tp + fp)
+recall_calc = tp / (tp + fn)
+
+print("my precision: ", precision_calc)
+print("my recall: ", recall_calc)
 
 '''
 print("Working with {0} lambda images".format(len(lambda_data)))
