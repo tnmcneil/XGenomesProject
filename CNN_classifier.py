@@ -57,7 +57,6 @@ os.chdir(lambda_dir1)
 lambda_data1 = glob.glob("*.jpg")
 lambda_data1 = [lambda_dir1 + "/" + data for data in lambda_data1]
 
-'''
 lambda_dir2 = cwd + "/data/lambda_2"
 os.chdir(lambda_dir2)
 lambda_data2 = glob.glob("*.jpg")
@@ -69,16 +68,14 @@ lambda_data3 = glob.glob("*.jpg")
 lambda_data3 = [lambda_dir3 + "/" + data for data in lambda_data3]
 
 lambda_data = lambda_data1 + lambda_data2 + lambda_data3
-'''
 
-lambda_data = lambda_data1
+#lambda_data = lambda_data1
 
 t7_dir1 = cwd + "/data/T7_1"
 os.chdir(t7_dir1)
 t7_data1 = glob.glob("*.jpg")
 t7_data1 = [t7_dir1 + "/" + data for data in t7_data1]
 
-'''
 t7_dir2 = cwd + "/data/T7_2"
 os.chdir(t7_dir2)
 t7_data2 = glob.glob("*.jpg")
@@ -90,9 +87,8 @@ t7_data3 = glob.glob("*.jpg")
 t7_data3 = [t7_dir3 + "/" + data for data in t7_data3]
 
 t7_data = t7_data1 + t7_data2 + t7_data3
-'''
 
-t7_data = t7_data1
+#t7_data = t7_data1
 
 random.shuffle(lambda_data)
 random.shuffle(t7_data)
